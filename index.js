@@ -1,11 +1,12 @@
-require('dotenv').config()
 const express = require('express')
 const app = express()
+require('dotenv').config()
 const bodyParser = require('body-parser')
-const cors = require('cors')
+
 const Note = require('./models/note')
 
 app.use(bodyParser.json())
+const cors = require('cors')
 app.use(cors())
 
 const requestLogger = (req, res, next) => {
@@ -18,6 +19,7 @@ const requestLogger = (req, res, next) => {
 
 app.use(requestLogger)
 
+/*
 let notes = [
     {
         id: 1,
@@ -38,6 +40,7 @@ let notes = [
         important: true
     }
 ]
+*/
 
 app.use(express.static('build'))
 
@@ -45,14 +48,8 @@ app.get('/', (req, res) => {
     res.send('<h1>Hello Wörld!</h1>')
 })
 
-app.post('/api/notes', (request, response) => {
+app.post('/api/notes', (request, response, next) => {
     const body = request.body
-
-    if (body.content === undefined) {
-        return response.status(400).json({
-            error: 'content missing'
-        })
-    }
 
     const note = new Note({
         content: body.content,
@@ -60,10 +57,13 @@ app.post('/api/notes', (request, response) => {
         date: new Date(),
     })
 
-    note.save().then(savedNote => {
-        response.json(savedNote.toJSON())
-    })
-    
+    note
+        .save()
+        .then(savedNote => savedNote.toJSON())
+        .then(savedAndFormattedNote => {
+            response.json(savedAndFormattedNote)
+        })
+        .catch(error => next(error))
 })
 
 app.get('/api/notes', (req, res) => {
@@ -115,7 +115,7 @@ app.put('/api/notes/:id', (request, response, next) => {
 }*/
 
 const unknownEndpoint = (req, res) => {
-    res.status(404).send({ error: 'unknown endpoint' })
+    res.status(404).send({ error: 'Unknown endpoint' })
 }
 
 app.use(unknownEndpoint)
@@ -125,6 +125,8 @@ const errorHandler = (error, req, res, next) => {
 
     if (error.name === 'CastError' && error.kind == 'ObjectId') {
         return res.status(400).send({ error: 'Malformatted id' })
+    } else if (error.name === 'ValidationError') {
+        return res.status(400).json({ error: error.message })
     }
 
     next(error)
