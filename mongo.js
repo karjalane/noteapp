@@ -7,7 +7,7 @@ if ( process.argv.length < 3 ) {
 
 const password = process.argv[2]
 
-const url = 
+const url =
     `mongodb+srv://noteuser:${ password }@fsonotes-wsako.mongodb.net/note-app?retryWrites=true&w=majority`
 
 mongoose.connect(url, { useNewUrlParser: true })
@@ -20,11 +20,11 @@ const noteSchema = new mongoose.Schema({
 
 const Note = mongoose.model('Note', noteSchema)
 
-const note = new Note({
+/*const note = new Note({
     content: 'Time to die',
     date: new Date(),
     important: true,
-})
+})*/
 
 //note.save().then(response => {
 //    console.log('note saved!');
